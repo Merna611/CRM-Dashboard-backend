@@ -1,0 +1,96 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  MEMBER
+}
+
+enum ContactStatus {
+  LEAD
+  PROSPECT
+  CUSTOMER
+  CHURNED
+}
+
+enum DealStage {
+  LEAD
+  QUALIFIED
+  PROPOSAL
+  NEGOTIATION
+  CLOSED_WON
+  CLOSED_LOST
+}
+
+enum ActivityType {
+  CALL
+  EMAIL
+  MEETING
+  NOTE
+}
+
+model User {
+  id         String     @id @default(cuid())
+  name       String
+  email      String     @unique
+  password   String
+  role       Role       @default(MEMBER)
+  avatar     String?
+  createdAt  DateTime   @default(now())
+  contacts   Contact[]  @relation("AssignedContacts")
+  deals      Deal[]     @relation("AssignedDeals")
+  activities Activity[]
+}
+
+model Contact {
+  id           String        @id @default(cuid())
+  name         String
+  email        String
+  phone        String?
+  company      String?
+  status       ContactStatus @default(LEAD)
+  tags         String[]
+  notes        String?
+  assignedTo   User?         @relation("AssignedContacts", fields: [assignedToId], references: [id])
+  assignedToId String?
+  deals        Deal[]
+  activities   Activity[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model Deal {
+  id            String     @id @default(cuid())
+  title         String
+  value         Float
+  stage         DealStage  @default(LEAD)
+  probability   Int        @default(10)
+  expectedClose DateTime?
+  contact       Contact    @relation(fields: [contactId], references: [id])
+  contactId     String
+  assignedTo    User?      @relation("AssignedDeals", fields: [assignedToId], references: [id])
+  assignedToId  String?
+  activities    Activity[]
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+}
+
+model Activity {
+  id          String       @id @default(cuid())
+  type        ActivityType
+  description String
+  contact     Contact?     @relation(fields: [contactId], references: [id])
+  contactId   String?
+  deal        Deal?        @relation(fields: [dealId], references: [id])
+  dealId      String?
+  user        User         @relation(fields: [userId], references: [id])
+  userId      String
+  createdAt   DateTime     @default(now())
+}
