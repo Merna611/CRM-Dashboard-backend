@@ -48,13 +48,9 @@ async function start() {
 
   await server.start();
 
-  const allowedOrigins = process.env.ALLOWED_ORIGINS
-    ? process.env.ALLOWED_ORIGINS.split(',')
-    : ['http://localhost:5173', 'http://localhost:3000'];
-
   app.use(
     '/graphql',
-    cors<cors.CorsRequest>({ origin: allowedOrigins, credentials: true }),
+    cors<cors.CorsRequest>({ origin: true, credentials: true }),
     express.json(),
     expressMiddleware(server, {
       context: async ({ req }) => ({
